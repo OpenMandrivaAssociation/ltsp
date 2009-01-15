@@ -2,7 +2,7 @@ Name:           ltsp
 Version:        5.1.44
 Release:        %mkrel 1
 Summary:        Linux Terminal Server Project Server and Client
-Group:          User Interface/Desktops
+Group:          Graphical desktop/Other
 
 License:        GPLv2 and GPLv2+
 URL:            http://www.ltsp.org
