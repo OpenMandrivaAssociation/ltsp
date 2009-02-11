@@ -13,11 +13,8 @@ URL:            http://www.ltsp.org
 #   mkdst tar --from-tag=ltsp-%{version}
 Source0:        ltsp-%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-%if 0%{?fedora} > 7 || 0%{?rhel} > 5
 BuildRequires: popt-devel
-%else
 BuildRequires: popt
-%endif
 BuildRequires: flex bison
 BuildRequires: automake
 BuildRequires: pkgconfig
