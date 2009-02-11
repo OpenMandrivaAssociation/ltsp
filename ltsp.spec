@@ -1,34 +1,52 @@
 Name:           ltsp
-Version:        5.1.44
+Version:        5.1.58
+%define _datestamp .20090203.18
+#Release:        2%{_datestamp}%{?dist}
 Release:        %mkrel 1
 Summary:        Linux Terminal Server Project Server and Client
-Group:          Graphical desktop/Other
+Group:          System/X11
 
 License:        GPLv2 and GPLv2+
 URL:            http://www.ltsp.org
+#   bzr branch http://bazaar.launchpad.net/~ltsp-upstream/ltsp/ltsp-trunk
+#   cd ltsp-trunk
+#   mkdst tar --from-tag=ltsp-%{version}
 Source0:        ltsp-%{version}.tar.bz2
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+%if 0%{?fedora} > 7 || 0%{?rhel} > 5
 BuildRequires: popt-devel
+%else
 BuildRequires: popt
+%endif
 BuildRequires: flex bison
 BuildRequires: automake
 BuildRequires: pkgconfig
 BuildRequires: libx11-devel
+%ifarch %{ix86} x86_64
+# Need pxelinux.0 from syslinux if server is x86
 BuildRequires: syslinux
+%endif
 BuildRequires: tftp-server
 
+# tftpboot directory location changed in F9+
+%if 0%{?fedora} > 8 || 0%{?rhel} > 5
 %define _tftpdir /var/lib/tftpboot
+%else
+%define _tftpdir /tftpboot
+%endif
 
 %description
 LTSP client and server
 
 %package client
 Summary:        LTSP client
-Group:          Graphical desktop/Other
+Group:          System/X11
 Requires:       chkconfig
 Requires:       ltspfsd
-Requires:       mille-xterm-nbd
-Requires:       python-serial
+Requires:       nbd
+# Jetpipe needs pyserial
+Requires:       pyserial
+Requires(post): initscripts
 BuildRequires:  glib2-devel
 
 %description client
@@ -37,48 +55,59 @@ This package contains the scripts necessary to boot as a LTSP5 thin client.
 
 %package server
 Summary:        LTSP server
-Group:          System/Servers
+Group:          System/X11
+%if 0%{?fedora}
+# XXX: Fix this after RHEL5 livecd-tools backports is complete.
+# needed to install client chroots
 Requires:       livecd-tools >= 015
+%endif
 Requires:       tftp-server
 Requires:       ltspfs
-Requires:       dhcp-server
+Requires:       dhcp
 Requires:       gettext
 Requires:       bridge-utils
 Requires:       nbd
-Requires:       ldm
+Requires:       ldminfod
+Requires(post): chkconfig
+Requires(preun): chkconfig
 
 %description server
 LTSP server package
 This package contains the scripts and services necessary to install and run
 a Linux Terminal Server.
 
+%if 0%{?fedora}
+%ifarch %{ix86} x86_64
 %package vmclient
 Summary:        LTSP Virtual Machine Client
-Group:          Emulators
+Group:          Applications/Emulators
 Requires:       kvm
 
 %description vmclient
 Run a qemu-kvm virtual machine as a PXE client.  This allows you to test a
 LTSP server without the hassle of having extra hardware.  Requires
 your system to support hardware virtualization or it will be very slow.
+%endif
+%endif
+
 
 %prep
 %setup -q
 
 %build
 pushd client/getltscfg
-  %make
+  make %{?_smp_mflags}
 popd
 
 pushd localapps
   %configure
-  %make
+  make %{?_smp_mflags}
 popd
 
 
 %install
+##### make directories
 rm -rf $RPM_BUILD_ROOT
-
 # client
 mkdir -p $RPM_BUILD_ROOT%{_bindir}
 mkdir -p $RPM_BUILD_ROOT%{_sbindir}
@@ -92,6 +121,7 @@ mkdir -p $RPM_BUILD_ROOT%{_datadir}/ldm/rc.d/
 mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/kernel/postinst.d/
 mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/kernel/prerm.d/
 mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/
+mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/cache/ltsp-localapps/
 
 # server
 mkdir -p $RPM_BUILD_ROOT%{_mandir}/man8
@@ -112,20 +142,18 @@ mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/xinetd.d/
 mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/network-scripts/
 mkdir -p $RPM_BUILD_ROOT/opt/ltsp
 mkdir -p $RPM_BUILD_ROOT/opt/ltsp/images
-mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/cache/localapps/
 
 mkdir -p $RPM_BUILD_ROOT%{_tftpdir}/ltsp/i386/pxelinux.cfg/
 mkdir -p $RPM_BUILD_ROOT%{_tftpdir}/ltsp/x86_64/pxelinux.cfg/
 mkdir -p $RPM_BUILD_ROOT%{_tftpdir}/ltsp/ppc/
 mkdir -p $RPM_BUILD_ROOT%{_tftpdir}/ltsp/ppc64/
 
-mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/ltsp/live-config/
-
 ###### client install
 pushd localapps
     make install DESTDIR=$RPM_BUILD_ROOT
 popd
 install -m 0755 localapps/ltsp-localappsd $RPM_BUILD_ROOT/%{_bindir}/
+install -m 0755 localapps/ltsp-genmenu $RPM_BUILD_ROOT/%{_bindir}/
 
 install -m 0755 client/getltscfg/getltscfg $RPM_BUILD_ROOT/%{_bindir}/getltscfg
 install -m 0644 client/getltscfg/getltscfg.1 $RPM_BUILD_ROOT/%{_mandir}/man1/
@@ -142,7 +170,7 @@ install -m 0755 client/jetpipe/jetpipe $RPM_BUILD_ROOT/%{_sbindir}
 install -m 0644 client/jetpipe/jetpipe.8 $RPM_BUILD_ROOT/%{_mandir}/man8/
 install -m 0755 client/scripts/k12linux/ltsp-rewrap-latest-kernel $RPM_BUILD_ROOT/%{_sbindir}
 install -m 0700 client/chroot-setup/ltsp-chroot-setup $RPM_BUILD_ROOT/%{_datadir}/ltsp/
-install -m 0755 localapps/ldm-rc.d/S01-localapps $RPM_BUILD_ROOT%{_datadir}/ldm/rc.d/
+install -m 0755 localapps/ldm-rc.d/* $RPM_BUILD_ROOT%{_datadir}/ldm/rc.d/
 cp -av client/chroot-setup/k12linux/* $RPM_BUILD_ROOT%{_datadir}/ltsp/chroot-setup.d/
 cp -av client/screen.d $RPM_BUILD_ROOT/%{_datadir}/ltsp/
 cp -av client/screen-session.d $RPM_BUILD_ROOT/%{_datadir}/ltsp/
@@ -185,7 +213,6 @@ install -m 0755 server/scripts/k12linux/hosts-update $RPM_BUILD_ROOT/%{_datadir}
 install -m 0755 server/scripts/k12linux/dhcpd-update $RPM_BUILD_ROOT/%{_datadir}/ltsp/scripts/
 cp -p server/scripts/k12linux/scripts.d/*   $RPM_BUILD_ROOT%{_datadir}/ltsp/scripts.d/
 cp -p server/scripts/k12linux/chkconfig.d/* $RPM_BUILD_ROOT%{_datadir}/ltsp/chkconfig.d/
-cp -a server/configs/k12linux/live-config/* $RPM_BUILD_ROOT%{_sysconfdir}/ltsp/live-config/
 install -m 0644 server/scripts/k12linux/mksquashfs-exclude $RPM_BUILD_ROOT/%{_datadir}/ltsp/
 
 # Remove irrelevant plugins from package
@@ -211,17 +238,23 @@ install -m 0644 server/configs/k12linux/ltspdist.template $RPM_BUILD_ROOT%{_sysc
 # PXE
 install -m 0644 server/configs/pxe-default.conf $RPM_BUILD_ROOT%{_tftpdir}/ltsp/i386/pxelinux.cfg/default
 install -m 0644 server/configs/pxe-default.conf $RPM_BUILD_ROOT%{_tftpdir}/ltsp/x86_64/pxelinux.cfg/default
+%ifarch %{ix86} x86_64
 install -m 0644 /usr/lib/syslinux/pxelinux.0 $RPM_BUILD_ROOT%{_tftpdir}/ltsp/i386
 install -m 0644 /usr/lib/syslinux/pxelinux.0 $RPM_BUILD_ROOT%{_tftpdir}/ltsp/x86_64
+%endif
 
 # PPC
 install -m 0644 server/configs/k12linux/yaboot-default.conf $RPM_BUILD_ROOT%{_tftpdir}/ltsp/ppc/yaboot.conf
 install -m 0644 server/configs/k12linux/yaboot-default.conf $RPM_BUILD_ROOT%{_tftpdir}/ltsp/ppc64/yaboot.conf
 
+%if 0%{?fedora}
+%ifarch %{ix86} x86_64
 # vmclient
 install -m 0755 vmclient/ltsp-vmclient           $RPM_BUILD_ROOT%{_sbindir}/
 install -m 0755 vmclient/ltsp-qemu-bridge-ifup   $RPM_BUILD_ROOT%{_sbindir}/
 install -m 0644 vmclient/config-vmclient         $RPM_BUILD_ROOT%{_sysconfdir}/ltsp/vmclient
+%endif
+%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -292,9 +325,11 @@ fi
 %{_datadir}/ltsp/ltsp-chroot-setup
 %{_datadir}/ltsp/chroot-setup.d/
 %{_bindir}/ltsp-localappsd
+%{_bindir}/ltsp-genmenu
 %{_sysconfdir}/sysconfig/mkinitrd.ltsp-template
 %{_sysconfdir}/kernel/postinst.d/ltsp
 %{_sysconfdir}/kernel/prerm.d/ltsp
+%dir %{_localstatedir}/cache/ltsp-localapps/
 
 # readonly-root related files
 %{_sysconfdir}/rwtab.d/*
@@ -323,7 +358,6 @@ fi
 %config(noreplace) %{_tftpdir}/ltsp/ppc/yaboot.conf
 %config(noreplace) %{_tftpdir}/ltsp/ppc64/yaboot.conf
 %{_bindir}/ltsp-localapps
-%{_sysconfdir}/ltsp/live-config/
 
 %dir /opt/ltsp
 %dir /opt/ltsp/images
@@ -349,7 +383,6 @@ fi
 %config(noreplace) %{_sysconfdir}/xinetd.d/nbdrootd
 %config(noreplace) %{_sysconfdir}/xinetd.d/nbdswapd
 %dir %{_sysconfdir}/ltsp/
-%dir %{_localstatedir}/cache/localapps/
 # Configuration Files
 %config(noreplace) %{_sysconfdir}/sysconfig/ltsp-dhcpd
 %config(noreplace) %{_sysconfdir}/sysconfig/network-scripts/ifcfg-ltspbr0
@@ -358,21 +391,17 @@ fi
 %config(noreplace) %{_sysconfdir}/ltsp/ltsp-server.conf
 %config(noreplace) %{_sysconfdir}/ltsp/dhcpd.conf
 %config(noreplace) %{_sysconfdir}/ltsp/ltsp-update-kernels.conf
-%dir %{_sysconfdir}/ltsp/kickstart/
-%dir %{_sysconfdir}/ltsp/kickstart/Fedora/
-%{_sysconfdir}/ltsp/kickstart/Fedora/common.ks
-%{_sysconfdir}/ltsp/kickstart/Fedora/common-i386.ks
-%{_sysconfdir}/ltsp/kickstart/Fedora/common-ppc.ks
-%{_sysconfdir}/ltsp/kickstart/Fedora/common-i686.ks
-%{_sysconfdir}/ltsp/kickstart/Fedora/common-x86_64.ks
-%dir %{_sysconfdir}/ltsp/kickstart/Fedora/9/
-%{_sysconfdir}/ltsp/kickstart/*/*/*.ks
+%{_sysconfdir}/ltsp/kickstart/
 %dir %{_sysconfdir}/ltsp/mkinitrd/
 %{_sysconfdir}/ltsp/mkinitrd/*
 %config(noreplace) %{_tftpdir}/ltsp/*/lts.conf
 
+%if 0%{?fedora}
+%ifarch %{ix86} x86_64
 %files vmclient
 %defattr(-,root,root,-)
 %{_sbindir}/ltsp-vmclient
 %{_sbindir}/ltsp-qemu-bridge-ifup
 %config(noreplace) %{_sysconfdir}/ltsp/vmclient
+%endif
+%endif
