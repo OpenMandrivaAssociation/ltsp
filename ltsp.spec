@@ -2,7 +2,7 @@ Name:           ltsp
 Version:        5.1.58
 %define _datestamp .20090203.18
 #Release:        2%{_datestamp}%{?dist}
-Release:        %mkrel 1
+Release:        %mkrel 2
 Summary:        Linux Terminal Server Project Server and Client
 Group:          System/X11
 
@@ -40,7 +40,7 @@ Summary:        LTSP client
 Group:          System/X11
 Requires:       chkconfig
 Requires:       ltspfsd
-Requires:       nbd
+Requires:       mille-xterm-nbd-server
 # Jetpipe needs pyserial
 Requires:       pyserial
 Requires(post): initscripts
