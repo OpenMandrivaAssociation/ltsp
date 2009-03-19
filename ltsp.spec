@@ -63,7 +63,7 @@ Requires:       ltspfs
 Requires:       dhcp
 Requires:       gettext
 Requires:       bridge-utils
-Requires:       nbd
+Requires:       mille-xterm-nbd-server
 Requires:       ldminfod
 Requires(post): chkconfig
 Requires(preun): chkconfig
