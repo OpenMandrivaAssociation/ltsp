@@ -2,7 +2,7 @@ Name:           ltsp
 Version:        5.1.58
 %define _datestamp .20090203.18
 #Release:        2%{_datestamp}%{?dist}
-Release:        %mkrel 2
+Release:        %mkrel 3
 Summary:        Linux Terminal Server Project Server and Client
 Group:          System/X11
 
@@ -12,7 +12,7 @@ URL:            http://www.ltsp.org
 #   cd ltsp-trunk
 #   mkdst tar --from-tag=ltsp-%{version}
 Source0:        ltsp-%{version}.tar.bz2
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: popt-devel
 BuildRequires: popt
 BuildRequires: flex bison
