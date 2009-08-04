@@ -1,8 +1,8 @@
 Name:           ltsp
-Version:        5.1.58
+Version:        5.1.79
 %define _datestamp .20090203.18
 #Release:        2%{_datestamp}%{?dist}
-Release:        %mkrel 3
+Release:        %mkrel 1
 Summary:        Linux Terminal Server Project Server and Client
 Group:          System/X11
 
@@ -11,7 +11,7 @@ URL:            http://www.ltsp.org
 #   bzr branch http://bazaar.launchpad.net/~ltsp-upstream/ltsp/ltsp-trunk
 #   cd ltsp-trunk
 #   mkdst tar --from-tag=ltsp-%{version}
-Source0:        ltsp-%{version}.tar.bz2
+Source0:        http://ftp.de.debian.org/debian/pool/main/l/%{name}/%{name}_%{version}.orig.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: popt-devel
 BuildRequires: popt
@@ -335,7 +335,7 @@ fi
 
 %files server
 %defattr(-,root,root,-)
-%doc ChangeLog COPYING TODO server/doc/lts-parameters.txt
+%doc COPYING TODO server/doc/lts-parameters.txt
 %dir %{_localstatedir}/lib/ltsp/
 %attr(700,nobody,nobody) %dir %{_localstatedir}/lib/ltsp/swapfiles/
 %dir %{_tftpdir}/
