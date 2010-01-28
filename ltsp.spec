@@ -1,5 +1,5 @@
 Name:           ltsp
-Version:        5.1.98
+Version:        5.1.99
 %define _datestamp .20090203.18
 #Release:        2%{_datestamp}%{?dist}
 Release:        %mkrel 1
