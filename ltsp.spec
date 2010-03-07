@@ -1,11 +1,10 @@
 Name:           ltsp
-Version:        5.1.99
+Version:        5.2
 %define _datestamp .20090203.18
 #Release:        2%{_datestamp}%{?dist}
 Release:        %mkrel 1
 Summary:        Linux Terminal Server Project Server and Client
 Group:          System/X11
-
 License:        GPLv2 and GPLv2+
 URL:            http://www.ltsp.org
 #   bzr branch http://bazaar.launchpad.net/~ltsp-upstream/ltsp/ltsp-trunk
