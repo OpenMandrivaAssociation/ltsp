@@ -298,7 +298,7 @@ fi
 
 %files client
 %defattr(-,root,root,-)
-%{_mandir}/man1/getltscfg.1.lzma
+%{_mandir}/man1/getltscfg.1.*
 %{_bindir}/getltscfg
 %{_bindir}/xatomwait
 %{_sbindir}/ltsp-client-launch
@@ -317,7 +317,7 @@ fi
 %{_datadir}/ldm/rc.d/
 %{_sbindir}/jetpipe
 %{_sbindir}/ltsp-rewrap-latest-kernel
-%{_mandir}/man8/jetpipe.8.lzma
+%{_mandir}/man8/jetpipe.8.*
 %{_datadir}/ltsp/ltsp-chroot-setup
 %{_datadir}/ltsp/chroot-setup.d/
 %{_bindir}/ltsp-localappsd
