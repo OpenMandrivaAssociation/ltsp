@@ -2,7 +2,7 @@ Name:           ltsp
 Version:        5.2.4
 %define _datestamp .20090203.18
 #Release:        2%{_datestamp}%{?dist}
-Release:        %mkrel 1
+Release:        2
 Summary:        Linux Terminal Server Project Server and Client
 Group:          System/X11
 License:        GPLv2 and GPLv2+
