@@ -6,7 +6,7 @@ Release:        2
 Summary:        Linux Terminal Server Project Server and Client
 Group:          System/X11
 License:        GPLv2 and GPLv2+
-URL:            http://www.ltsp.org
+URL:            https://www.ltsp.org
 #   bzr branch http://bazaar.launchpad.net/~ltsp-upstream/ltsp/ltsp-trunk
 #   cd ltsp-trunk
 #   mkdst tar --from-tag=ltsp-%{version}
